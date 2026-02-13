@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Product Filter</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+            --price-color: #00b894;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .product-image {
+            height: 200px;
+            background-color: #dfe6e9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #b2bec3;
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .category-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #636e72;
+            margin-bottom: 10px;
+        }
+
+        .product-title {
+            margin: 0 0 10px 0;
+            font-size: 1.2rem;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--price-color);
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>TechStore Products</h1>
+        <p>Find the best gadgets for your needs</p>
+    </header>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="categoryFilter">Filter by Category:</label>
+            <select id="categoryFilter">
+                <option value="all">All Categories</option>
+                <option value="electronics">Electronics</option>
+                <option value="accessories">Accessories</option>
+                <option value="audio">Audio</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="sortOrder">Sort by:</label>
+            <select id="sortOrder">
+                <option value="default">Featured</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="product-grid" id="productGrid">
+        <!-- Products will be injected here via JavaScript -->
+    </div>
+</div>
+
+<script>
+    const products = [
+        { id: 1, name: "Wireless Headphones", category: "audio", price: 129.99, icon: "🎧" },
+        { id: 2, name: "Smart Watch", category: "electronics", price: 199.50, icon: "⌚" },
+        { id: 3, name: "Laptop Stand", category: "accessories", price: 45.00, icon: "💻" },
+        { id: 4, name: "Bluetooth Speaker", category: "audio", price: 79.99, icon: "🔊" },
+        { id: 5, name: "Mechanical Keyboard", category: "electronics", price: 150.00, icon: "⌨️" },
+        { id: 6, name: "USB-C Hub", category: "accessories", price: 35.99, icon: "🔌" },
+        { id: 7, name: "Gaming Mouse", category: "electronics", price: 59.99, icon: "🖱️" },
+        { id: 8, name: "Noise Cancelling Earbuds", category: "audio", price: 249.00, icon: "🎵" }
+    ];
+
+    const productGrid = document.getElementById('productGrid');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const sortOrder = document.getElementById('sortOrder');
+
+    function renderProducts(items) {
+        productGrid.innerHTML = '';
+        if (items.length === 0) {
+            productGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No products found.</p>';
+            return;
+        }
+
+        items.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML = `
+                <div class="product-image">${product.icon}</div>
+                <div class="product-info">
+                    <span class="category-tag">${product.category}</span>
+                    <h3 class="product-title">${product.name}</h3>
+                    <p class="product-price">₹${product.price.toFixed(2)}</p>
+                </div>
+            `;
+            productGrid.appendChild(card);
+        });
+    }
+
+    function updateProducts() {
+        let filtered = [...products];
+        const category = categoryFilter.value;
+        const sort = sortOrder.value;
+
+        // Filter
+        if (category !== 'all') {
+            filtered = filtered.filter(p => p.category === category);
+        }
+
+        // Sort
+        switch(sort) {
+            case 'price-low':
+                filtered.sort((a, b) => a.price - b.price);
+                break;
+            case 'price-high':
+                filtered.sort((a, b) => b.price - a.price);
+                break;
+            case 'name-asc':
+                filtered.sort((a, b) => a.name.localeCompare(b.name));
+                break;
+            default:
+                // Default order (by ID or original array order)
+                break;
+        }
+
+        renderProducts(filtered);
+    }
+
+    categoryFilter.addEventListener('change', updateProducts);
+    sortOrder.addEventListener('change', updateProducts);
+    renderProducts(products);
+</script>
+
+</body>
+</html>

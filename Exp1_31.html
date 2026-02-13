@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Product Card Component</title>
+
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --text-color: #2c3e50;
+            --bg-color: #f5f6fa;
+            --card-bg: #ffffff;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-color);
+            margin-bottom: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .product-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 100%;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-image-container {
+            width: 100%;
+            height: 220px;
+            background-color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .product-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .card-content {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .product-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 15px;
+        }
+
+        .price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        .add-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .add-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .stock-in {
+            background-color: var(--success-color);
+        }
+
+        .stock-low {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+
+        .stock-out {
+            background-color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ProductCard Component
+        const ProductCard = ({ product }) => {
+            const { name, category, price, image, stock } = product;
+
+            // Determine stock status and styling
+            let stockStatus = { label: 'In Stock', className: 'stock-in' };
+            let isDisable = false;
+
+            if (stock === 0) {
+                stockStatus = { label: 'Out of Stock', className: 'stock-out' };
+                isDisable = true;
+            } else if (stock < 10) {
+                stockStatus = { label: `Low Stock: ${stock} left`, className: 'stock-low' };
+            }
+
+            return (
+                <div className="product-card">
+                    <div className={`stock-badge ${stockStatus.className}`}>
+                        {stockStatus.label}
+                    </div>
+
+                    <div className="card-image-container">
+                        <img src={image} alt={name} className="card-image" />
+                    </div>
+
+                    <div className="card-content">
+                        <span className="category">{category}</span>
+                        <h3 className="product-title">{name}</h3>
+
+                        <div className="price-row">
+                            <span className="price">₹{price.toFixed(2)}</span>
+                            <button className="add-btn" disabled={isDisable}>
+                                {isDisable ? 'Sold Out' : 'Add to Cart'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const products = [
+                {
+                    id: 1,
+                    name: "Premium Wireless Headphones",
+                    category: "Audio",
+                    price: 249.99,
+                    stock: 45,
+                    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60"
+                },
+                {
+                    id: 2,
+                    name: "Ergonomic Office Chair",
+                    category: "Furniture",
+                    price: 199.50,
+                    stock: 5,
+                    image: "https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=500&auto=format&fit=crop&q=60"
+                },
+                {
+                    id: 3,
+                    name: "Smart Fitness Watch",
+                    category: "Wearables",
+                    price: 129.00,
+                    stock: 0,
+                    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60"
+                },
+                {
+                    id: 4,
+                    name: "Mechanical Keyboard",
+                    category: "Electronics",
+                    price: 159.99,
+                    stock: 12,
+                    image: "https://images.unsplash.com/photo-1587829741301-dc798b91a603?w=500&auto=format&fit=crop&q=60"
+                }
+            ];
+
+            return (
+                <div className="container">
+                    <h1>Featured Products</h1>
+                    <div className="grid">
+                        {products.map(product => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive SVG Drawing Tool</title>
+    <style>
+        :root {
+            --toolbar-bg: #2c3e50;
+            --toolbar-text: #ecf0f1;
+            --canvas-bg: #ffffff;
+            --border-color: #bdc3c7;
+            --accent-color: #3498db;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            width: 100%;
+            background-color: var(--toolbar-bg);
+            color: var(--toolbar-text);
+            padding: 1vh 0;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3vh;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 2vw;
+            padding: 1.5vh 2vw;
+            background-color: #fff;
+            border-bottom: 1px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 1vw;
+        }
+
+        label {
+            font-size: 2vh;
+            font-weight: 600;
+            color: #333;
+        }
+
+        select, input[type="color"], button {
+            padding: 0.8vh 1vw;
+            font-size: 1.8vh;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #fff;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            width: 95vw;
+            margin: 2vh auto;
+            background-color: var(--canvas-bg);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .toolbar {
+                flex-wrap: wrap;
+                gap: 1vh;
+            }
+
+            .tool-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            select, button {
+                flex-grow: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>SVG Studio</h1>
+</header>
+
+<div class="toolbar">
+    <div class="tool-group">
+        <label for="shapeSelect">Tool:</label>
+        <select id="shapeSelect">
+            <option value="pencil">Freehand (Pencil)</option>
+            <option value="rect">Rectangle</option>
+            <option value="circle">Circle</option>
+            <option value="line">Line</option>
+        </select>
+    </div>
+
+    <div class="tool-group">
+        <label for="colorPicker">Color:</label>
+        <input type="color" id="colorPicker" value="#3498db">
+    </div>
+
+    <div class="tool-group">
+        <label for="strokeWidth">Size:</label>
+        <select id="strokeWidth">
+            <option value="2">Thin</option>
+            <option value="5" selected>Medium</option>
+            <option value="10">Thick</option>
+        </select>
+    </div>
+
+    <div class="tool-group">
+        <button id="undoBtn">Undo</button>
+        <button id="clearBtn" style="color: #e74c3c; border-color: #e74c3c;">Clear All</button>
+    </div>
+</div>
+
+<div class="canvas-container" id="canvasContainer">
+    <svg id="drawingCanvas"></svg>
+</div>
+
+<script>
+    const svg = document.getElementById('drawingCanvas');
+    const shapeSelect = document.getElementById('shapeSelect');
+    const colorPicker = document.getElementById('colorPicker');
+    const strokeWidthSelect = document.getElementById('strokeWidth');
+    const undoBtn = document.getElementById('undoBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let isDrawing = false;
+    let startX = 0;
+    let startY = 0;
+    let currentElement = null;
+
+    function getMousePosition(evt) {
+        const CTM = svg.getScreenCTM();
+        if (evt.touches) { evt = evt.touches[0]; }
+        return {
+            x: (evt.clientX - CTM.e) / CTM.a,
+            y: (evt.clientY - CTM.f) / CTM.d
+        };
+    }
+
+    function startDrawing(evt) {
+        isDrawing = true;
+        const pos = getMousePosition(evt);
+        startX = pos.x;
+        startY = pos.y;
+        const color = colorPicker.value;
+        const width = strokeWidthSelect.value;
+        const shape = shapeSelect.value;
+
+        if (shape === 'pencil') {
+            currentElement = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            currentElement.setAttribute("d", `M ${startX} ${startY}`);
+            currentElement.setAttribute("fill", "none");
+            currentElement.setAttribute("stroke-linecap", "round");
+            currentElement.setAttribute("stroke-linejoin", "round");
+        } else if (shape === 'rect') {
+            currentElement = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            currentElement.setAttribute("x", startX);
+            currentElement.setAttribute("y", startY);
+            currentElement.setAttribute("width", 0);
+            currentElement.setAttribute("height", 0);
+            currentElement.setAttribute("fill", "rgba(255,255,255,0.1)"); // Semi-transparent fill
+        } else if (shape === 'circle') {
+            currentElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            currentElement.setAttribute("cx", startX);
+            currentElement.setAttribute("cy", startY);
+            currentElement.setAttribute("r", 0);
+            currentElement.setAttribute("fill", "rgba(255,255,255,0.1)");
+        } else if (shape === 'line') {
+            currentElement = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            currentElement.setAttribute("x1", startX);
+            currentElement.setAttribute("y1", startY);
+            currentElement.setAttribute("x2", startX);
+            currentElement.setAttribute("y2", startY);
+        }
+
+        currentElement.setAttribute("stroke", color);
+        currentElement.setAttribute("stroke-width", width);
+
+        svg.appendChild(currentElement);
+    }
+
+    function draw(evt) {
+        if (!isDrawing || !currentElement) return;
+        evt.preventDefault();
+
+        const pos = getMousePosition(evt);
+        const currentX = pos.x;
+        const currentY = pos.y;
+        const shape = shapeSelect.value;
+
+        if (shape === 'pencil') {
+            const d = currentElement.getAttribute("d");
+            currentElement.setAttribute("d", `${d} L ${currentX} ${currentY}`);
+        } else if (shape === 'rect') {
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            const x = Math.min(currentX, startX);
+            const y = Math.min(currentY, startY);
+
+            currentElement.setAttribute("x", x);
+            currentElement.setAttribute("y", y);
+            currentElement.setAttribute("width", width);
+            currentElement.setAttribute("height", height);
+        } else if (shape === 'circle') {
+            const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
+            currentElement.setAttribute("r", radius);
+        } else if (shape === 'line') {
+            currentElement.setAttribute("x2", currentX);
+            currentElement.setAttribute("y2", currentY);
+        }
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+        currentElement = null;
+    }
+
+    undoBtn.addEventListener('click', () => {
+        if (svg.lastChild) {
+            svg.removeChild(svg.lastChild);
+        }
+    });
+
+    clearBtn.addEventListener('click', () => {
+        while (svg.firstChild) {
+            svg.removeChild(svg.firstChild);
+        }
+    });
+
+    svg.addEventListener('mousedown', startDrawing);
+    svg.addEventListener('mousemove', draw);
+    svg.addEventListener('mouseup', stopDrawing);
+    svg.addEventListener('mouseleave', stopDrawing);
+
+    svg.addEventListener('touchstart', startDrawing);
+    svg.addEventListener('touchmove', draw);
+    svg.addEventListener('touchend', stopDrawing);
+
+</script>
+
+</body>
+</html>

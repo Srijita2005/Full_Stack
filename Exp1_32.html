@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        /* Controls Section */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* Add Book Form */
+        .add-book-form {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .book-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .book-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .book-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .book-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+        }
+
+        .book-author {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .book-meta {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .category-tag {
+            background-color: #e8f4f8;
+            color: var(--accent-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            grid-column: 1 / -1;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            .add-book-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const initialBooks = [
+            { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", category: "Classic" },
+            { id: 2, title: "Clean Code", author: "Robert C. Martin", category: "Programming" },
+            { id: 3, title: "To Kill a Mockingbird", author: "Harper Lee", category: "Classic" },
+            { id: 4, title: "The Pragmatic Programmer", author: "Andrew Hunt", category: "Programming" }
+        ];
+
+        const LibraryApp = () => {
+            const [books, setBooks] = useState(initialBooks);
+            const [searchTerm, setSearchTerm] = useState("");
+            const [newBook, setNewBook] = useState({ title: "", author: "", category: "" });
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setNewBook({ ...newBook, [name]: value });
+            };
+
+            const handleAddBook = (e) => {
+                e.preventDefault();
+                if (!newBook.title || !newBook.author || !newBook.category) {
+                    alert("Please fill in all fields");
+                    return;
+                }
+
+                const bookToAdd = {
+                    id: Date.now(),
+                    ...newBook
+                };
+
+                setBooks([...books, bookToAdd]);
+                setNewBook({ title: "", author: "", category: "" }); // Reset form
+            };
+
+            const handleRemoveBook = (id) => {
+                const updatedBooks = books.filter(book => book.id !== id);
+                setBooks(updatedBooks);
+            };
+
+            const filteredBooks = books.filter(book =>
+                book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                book.category.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            return (
+                <div className="container">
+                    <header>
+                        <h1>Library Management System</h1>
+                        <p>Manage your book collection efficiently</p>
+                    </header>
+
+                    {/* Add Book Form */}
+                    <form className="add-book-form" onSubmit={handleAddBook}>
+                        <div className="form-group">
+                            <label htmlFor="title">Book Title</label>
+                            <input
+                                type="text"
+                                id="title"
+                                name="title"
+                                className="form-input"
+                                placeholder="Enter title"
+                                value={newBook.title}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="author">Author</label>
+                            <input
+                                type="text"
+                                id="author"
+                                name="author"
+                                className="form-input"
+                                placeholder="Enter author"
+                                value={newBook.author}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="category">Category</label>
+                            <input
+                                type="text"
+                                id="category"
+                                name="category"
+                                className="form-input"
+                                placeholder="Genre/Category"
+                                value={newBook.category}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-primary">Add Book</button>
+                    </form>
+
+                    {/* Search Bar */}
+                    <div className="controls">
+                        <div className="search-box">
+                            <input
+                                type="text"
+                                className="search-input"
+                                placeholder="Search by title, author, or category..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Book List */}
+                    <div className="book-list">
+                        {filteredBooks.length > 0 ? (
+                            filteredBooks.map(book => (
+                                <div key={book.id} className="book-card">
+                                    <h3 className="book-title">{book.title}</h3>
+                                    <div className="book-author">by {book.author}</div>
+                                    <div className="book-meta">
+                                        <span className="category-tag">{book.category}</span>
+                                        <button
+                                            className="btn btn-danger"
+                                            onClick={() => handleRemoveBook(book.id)}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="empty-state">
+                                No books found matching your search.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<LibraryApp />);
+    </script>
+</body>
+</html>

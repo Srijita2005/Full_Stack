@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Character Counter</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e1e4e8;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 90%;
+            max-width: 600px;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+        }
+
+        .input-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .counter-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .progress-bar-bg {
+            flex-grow: 1;
+            height: 6px;
+            background-color: #edf2f7;
+            border-radius: 3px;
+            margin-right: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+            transition: width 0.2s ease, background-color 0.3s ease;
+        }
+
+        .count-display {
+            color: #718096;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .limit-warning .progress-bar-fill {
+            background-color: var(--warning-color);
+        }
+
+        .limit-warning .count-display {
+            color: var(--warning-color);
+        }
+
+        .limit-reached textarea {
+            border-color: var(--danger-color);
+        }
+
+        .limit-reached textarea:focus {
+            box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+        }
+
+        .limit-reached .progress-bar-fill {
+            background-color: var(--danger-color);
+        }
+
+        .limit-reached .count-display {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Message Composer</h2>
+
+    <div class="input-group" id="inputGroup">
+        <textarea
+            id="messageInput"
+            placeholder="Type your message here..."
+            maxlength="200"
+        ></textarea>
+
+        <div class="counter-container">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div class="count-display">
+                <span id="currentCount">0</span> / <span id="maxCount">200</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const messageInput = document.getElementById('messageInput');
+    const currentCountSpan = document.getElementById('currentCount');
+    const maxCountSpan = document.getElementById('maxCount');
+    const progressBar = document.getElementById('progressBar');
+    const inputGroup = document.getElementById('inputGroup');
+
+    const maxLength = messageInput.getAttribute('maxlength');
+    maxCountSpan.textContent = maxLength;
+
+    messageInput.addEventListener('input', updateCounter);
+
+    function updateCounter() {
+        const currentLength = messageInput.value.length;
+        const percentage = (currentLength / maxLength) * 100;
+
+        currentCountSpan.textContent = currentLength;
+
+        progressBar.style.width = `${percentage}%`;
+
+        inputGroup.classList.remove('limit-warning', 'limit-reached');
+
+        if (currentLength >= maxLength) {
+            inputGroup.classList.add('limit-reached');
+        } else if (percentage >= 90) {
+            inputGroup.classList.add('limit-warning');
+        }
+    }
+</script>
+
+</body>
+</html>
