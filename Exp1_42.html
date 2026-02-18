@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Simulator (Card Collection)</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --bg-color: #f0f3f8;
+            --panel-bg: #ffffff;
+            --text-color: #2d3436;
+            --code-bg: #2d3436;
+            --success: #00b894;
+            --error: #d63031;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #636e72;
+        }
+
+        /* Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-top: 0;
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        /* Postman-like Interface */
+        .request-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        select, input, button {
+            padding: 10px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            font-family: inherit;
+        }
+
+        select {
+            font-weight: bold;
+            width: 100px;
+        }
+
+        input {
+            flex-grow: 1;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #5849be;
+        }
+
+        .json-editor {
+            width: 100%;
+            height: 150px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            padding: 10px;
+            border: 1px solid #dfe6e9;
+            border-radius: 5px;
+            background-color: #fafafa;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .response-area {
+            background-color: var(--code-bg);
+            color: #fab1a0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            min-height: 200px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .status-200, .status-201 { background-color: var(--success); color: white; }
+        .status-404, .status-400, .status-500 { background-color: var(--error); color: white; }
+
+        /* Code Display */
+        pre {
+            background: #f1f2f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+
+        .note {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Card Collection API</h1>
+        <p class="subtitle">Experiment 1.4.2 - Express.js REST API Simulator</p>
+    </header>
+
+    <div class="grid">
+        <!-- Request Panel -->
+        <div class="card">
+            <h2>Request Simulator</h2>
+
+            <div class="request-bar">
+                <select id="method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                </select>
+                <input type="text" id="url" value="/cards" readonly>
+                <button onclick="sendRequest()">Send</button>
+            </div>
+
+            <div id="bodyInputGroup" style="display: none;">
+                <label for="requestBody" style="display:block; margin-bottom:5px; font-weight:bold;">Request Body (JSON):</label>
+                <textarea id="requestBody" class="json-editor">{
+    "name": "Queen of Diamonds",
+    "suit": "Diamonds",
+    "value": "Queen",
+    "rarity": "Uncommon"
+}</textarea>
+            </div>
+
+            <div id="idInputGroup" style="display: none; margin-top: 10px;">
+                <label for="cardId" style="font-weight:bold;">Card ID:</label>
+                <input type="number" id="cardId" placeholder="e.g., 1" style="width: 80px;">
+            </div>
+        </div>
+
+        <!-- Response Panel -->
+        <div class="card">
+            <h2>Response</h2>
+            <div id="statusBadge" class="status-badge" style="display: none;"></div>
+            <div id="responseOutput" class="response-area">// Response will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Source Code Section -->
+    <div class="card" style="margin-top: 30px;">
+        <h2>Node.js Source Code (Exp1_42.js)</h2>
+        <p>Copy this code to run the actual server.</p>
+<pre>
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+let cards = [
+    { id: 1, name: "Ace of Spades", suit: "Spades", value: "Ace", rarity: "Common" }
+];
+
+// GET All
+app.get('/cards', (req, res) => res.json({ success: true, data: cards }));
+
+// GET One
+app.get('/cards/:id', (req, res) => {
+    const card = cards.find(c => c.id == req.params.id);
+    card ? res.json({ success: true, data: card }) : res.status(404).json({ error: "Not found" });
+});
+
+// POST
+app.post('/cards', (req, res) => {
+    const newCard = { id: cards.length + 1, ...req.body };
+    cards.push(newCard);
+    res.status(201).json({ success: true, data: newCard });
+});
+
+// PUT
+app.put('/cards/:id', (req, res) => {
+    const card = cards.find(c => c.id == req.params.id);
+    if(card) {
+        Object.assign(card, req.body);
+        res.json({ success: true, data: card });
+    } else {
+        res.status(404).json({ error: "Not found" });
+    }
+});
+
+// DELETE
+app.delete('/cards/:id', (req, res) => {
+    const idx = cards.findIndex(c => c.id == req.params.id);
+    if(idx !== -1) {
+        cards.splice(idx, 1);
+        res.json({ success: true, message: "Deleted" });
+    } else {
+        res.status(404).json({ error: "Not found" });
+    }
+});
+
+app.listen(3000, () => console.log('Server running on port 3000'));
+</pre>
+    </div>
+</div>
+
+<script>
+    // --- SIMULATED BACKEND ---
+
+    // Initial Data
+    let db = [
+        { id: 1, name: "Ace of Spades", suit: "Spades", value: "Ace", rarity: "Common" },
+        { id: 2, name: "King of Hearts", suit: "Hearts", value: "King", rarity: "Rare" }
+    ];
+
+    // UI Logic
+    const methodSelect = document.getElementById('method');
+    const urlInput = document.getElementById('url');
+    const bodyGroup = document.getElementById('bodyInputGroup');
+    const idGroup = document.getElementById('idInputGroup');
+    const cardIdInput = document.getElementById('cardId');
+    const responseOutput = document.getElementById('responseOutput');
+    const statusBadge = document.getElementById('statusBadge');
+
+    // Handle UI changes based on method
+    methodSelect.addEventListener('change', () => {
+        const method = methodSelect.value;
+
+        // Show/Hide Body
+        if (method === 'POST' || method === 'PUT') {
+            bodyGroup.style.display = 'block';
+        } else {
+            bodyGroup.style.display = 'none';
+        }
+
+        // Show/Hide ID Input
+        if (method === 'GET' || method === 'POST') {
+            // GET can be list or single, but let's simplify: GET list is default
+            // We'll add a toggle logic for GET single later or just use ID input
+            if(method === 'GET') {
+                idGroup.style.display = 'block'; // Allow optional ID
+                urlInput.value = '/cards';
+            } else {
+                idGroup.style.display = 'none';
+                urlInput.value = '/cards';
+            }
+        }
+
+        if (method === 'PUT' || method === 'DELETE') {
+            idGroup.style.display = 'block';
+            urlInput.value = '/cards/:id';
+        }
+    });
+
+    // Update URL when ID changes
+    cardIdInput.addEventListener('input', () => {
+        const id = cardIdInput.value;
+        if (id) {
+            urlInput.value = `/cards/${id}`;
+        } else {
+            urlInput.value = '/cards';
+        }
+    });
+
+    function sendRequest() {
+        const method = methodSelect.value;
+        const id = cardIdInput.value ? parseInt(cardIdInput.value) : null;
+        let response = {};
+        let status = 200;
+
+        // Simulate Network Delay
+        responseOutput.textContent = "Loading...";
+        statusBadge.style.display = 'none';
+
+        setTimeout(() => {
+            try {
+                switch (method) {
+                    case 'GET':
+                        if (id) {
+                            const card = db.find(c => c.id === id);
+                            if (card) {
+                                response = { success: true, data: card };
+                            } else {
+                                status = 404;
+                                response = { success: false, message: "Card not found" };
+                            }
+                        } else {
+                            response = { success: true, count: db.length, data: db };
+                        }
+                        break;
+
+                    case 'POST':
+                        const body = JSON.parse(document.getElementById('requestBody').value);
+                        if (!body.name || !body.suit) {
+                            status = 400;
+                            response = { success: false, message: "Missing fields" };
+                        } else {
+                            const newId = db.length > 0 ? Math.max(...db.map(c => c.id)) + 1 : 1;
+                            const newCard = { id: newId, ...body };
+                            db.push(newCard);
+                            status = 201;
+                            response = { success: true, message: "Created", data: newCard };
+                        }
+                        break;
+
+                    case 'PUT':
+                        if (!id) {
+                            status = 400;
+                            response = { success: false, message: "ID required" };
+                        } else {
+                            const card = db.find(c => c.id === id);
+                            if (card) {
+                                const updateData = JSON.parse(document.getElementById('requestBody').value);
+                                Object.assign(card, updateData);
+                                response = { success: true, message: "Updated", data: card };
+                            } else {
+                                status = 404;
+                                response = { success: false, message: "Card not found" };
+                            }
+                        }
+                        break;
+
+                    case 'DELETE':
+                        if (!id) {
+                            status = 400;
+                            response = { success: false, message: "ID required" };
+                        } else {
+                            const idx = db.findIndex(c => c.id === id);
+                            if (idx !== -1) {
+                                db.splice(idx, 1);
+                                response = { success: true, message: "Deleted successfully" };
+                            } else {
+                                status = 404;
+                                response = { success: false, message: "Card not found" };
+                            }
+                        }
+                        break;
+                }
+            } catch (e) {
+                status = 500;
+                response = { error: "Invalid JSON or Server Error" };
+            }
+
+            // Render Response
+            statusBadge.textContent = `${status} ${getStatusText(status)}`;
+            statusBadge.className = `status-badge status-${status}`;
+            statusBadge.style.display = 'inline-block';
+            responseOutput.textContent = JSON.stringify(response, null, 4);
+
+        }, 500);
+    }
+
+    function getStatusText(code) {
+        const texts = { 200: 'OK', 201: 'Created', 400: 'Bad Request', 404: 'Not Found', 500: 'Error' };
+        return texts[code] || '';
+    }
+
+    // Trigger initial UI state
+    methodSelect.dispatchEvent(new Event('change'));
+
+</script>
+
+</body>
+</html>

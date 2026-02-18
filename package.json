@@ -1,0 +1,14 @@
+{
+  "name": "full-stack-experiments",
+  "version": "1.0.0",
+  "description": "Collection of Full Stack Experiments",
+  "main": "Exp1_42.js",
+  "scripts": {
+    "start": "node Exp1_42.js"
+  },
+  "author": "Srijita Das",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

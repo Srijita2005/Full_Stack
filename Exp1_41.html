@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System (Node.js)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .btn:hover {
+            background-color: #219150;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+        }
+
+        .simulation-log {
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+
+        .note {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Employee Management System</h1>
+        <p>Experiment 1.4.1 - Node.js CLI Application</p>
+    </header>
+
+    <div class="card">
+        <h2>Browser Simulation</h2>
+        <p>Click the button below to start the interactive CLI simulation in your browser.</p>
+
+        <button class="btn" onclick="startSimulation()">Start CLI Simulation</button>
+
+        <div id="consoleOutput" class="simulation-log">Waiting to start...</div>
+    </div>
+
+    <div class="card">
+        <h2>Node.js Source Code</h2>
+        <p>Save the following code as <code>app.js</code> and run it using <code>node app.js</code>.</p>
+<pre>
+const fs = require('fs');
+const readline = require('readline');
+
+const FILE_NAME = 'employees.json';
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+let employees = [];
+if (fs.existsSync(FILE_NAME)) {
+    const data = fs.readFileSync(FILE_NAME, 'utf8');
+    employees = JSON.parse(data || '[]');
+}
+
+const saveData = () => {
+    fs.writeFileSync(FILE_NAME, JSON.stringify(employees, null, 2));
+};
+
+const showMenu = () => {
+    console.log('\n--- Employee Management System ---');
+    console.log('1. Add Employee');
+    console.log('2. View All Employees');
+    console.log('3. Update Employee');
+    console.log('4. Delete Employee');
+    console.log('5. Exit');
+    rl.question('Select an option: ', handleInput);
+};
+
+const handleInput = (option) => {
+    switch (option.trim()) {
+        case '1':
+            rl.question('Enter Name: ', (name) => {
+                rl.question('Enter ID: ', (id) => {
+                    rl.question('Enter Department: ', (dept) => {
+                        if (!name || !id || !dept) {
+                            console.log('Error: All fields are required.');
+                        } else if (employees.find(e => e.id === id)) {
+                            console.log('Error: Employee ID already exists.');
+                        } else {
+                            employees.push({ id, name, dept });
+                            saveData();
+                            console.log('Employee added successfully.');
+                        }
+                        showMenu();
+                    });
+                });
+            });
+            break;
+        case '2':
+            console.log('\n--- Employee List ---');
+            if (employees.length === 0) console.log('No records found.');
+            else console.table(employees);
+            showMenu();
+            break;
+        case '3':
+            rl.question('Enter Employee ID to Update: ', (id) => {
+                const emp = employees.find(e => e.id === id);
+                if (!emp) {
+                    console.log('Employee not found.');
+                    showMenu();
+                } else {
+                    rl.question(`Enter New Name (${emp.name}): `, (name) => {
+                        rl.question(`Enter New Dept (${emp.dept}): `, (dept) => {
+                            emp.name = name || emp.name;
+                            emp.dept = dept || emp.dept;
+                            saveData();
+                            console.log('Employee updated successfully.');
+                            showMenu();
+                        });
+                    });
+                }
+            });
+            break;
+        case '4':
+            rl.question('Enter Employee ID to Delete: ', (id) => {
+                const initialLength = employees.length;
+                employees = employees.filter(e => e.id !== id);
+                if (employees.length < initialLength) {
+                    saveData();
+                    console.log('Employee deleted successfully.');
+                } else {
+                    console.log('Employee not found.');
+                }
+                showMenu();
+            });
+            break;
+        case '5':
+            console.log('Exiting...');
+            rl.close();
+            break;
+        default:
+            console.log('Invalid option. Please try again.');
+            showMenu();
+            break;
+    }
+};
+
+showMenu();
+</pre>
+    </div>
+</div>
+
+<script>
+    const consoleOutput = document.getElementById('consoleOutput');
+
+    function log(message) {
+        consoleOutput.innerText += message + '\n';
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+
+    function clearLog() {
+        consoleOutput.innerText = '';
+    }
+
+    function startSimulation() {
+        clearLog();
+        log("Starting Simulation...");
+
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+
+        function save() {
+            localStorage.setItem('employees', JSON.stringify(employees));
+        }
+
+        function menu() {
+            const choice = prompt(
+                "Employee Management System\n" +
+                "1. Add Employee\n" +
+                "2. View All Employees\n" +
+                "3. Update Employee\n" +
+                "4. Delete Employee\n" +
+                "5. Exit\n\n" +
+                "Enter your choice:"
+            );
+
+            if (choice === null) {
+                log("Simulation cancelled.");
+                return;
+            }
+
+            switch (choice.trim()) {
+                case '1':
+                    const name = prompt("Enter Name:");
+                    if(!name) break;
+                    const id = prompt("Enter ID:");
+                    if(!id) break;
+
+                    if (employees.find(e => e.id === id)) {
+                        alert("Error: ID already exists!");
+                        log("Error: ID already exists!");
+                    } else {
+                        const dept = prompt("Enter Department:");
+                        employees.push({ id, name, dept });
+                        save();
+                        log(`Added: ${name} (${id})`);
+                        alert("Employee added!");
+                    }
+                    break;
+
+                case '2':
+                    let output = "--- Employee List ---\n";
+                    if (employees.length === 0) output += "No records found.";
+                    else {
+                        employees.forEach(e => {
+                            output += `ID: ${e.id} | Name: ${e.name} | Dept: ${e.dept}\n`;
+                        });
+                    }
+                    log(output);
+                    alert(output);
+                    break;
+
+                case '3':
+                    const updateId = prompt("Enter ID to update:");
+                    const emp = employees.find(e => e.id === updateId);
+                    if (emp) {
+                        const newName = prompt(`Enter New Name (${emp.name}):`, emp.name);
+                        const newDept = prompt(`Enter New Dept (${emp.dept}):`, emp.dept);
+                        emp.name = newName;
+                        emp.dept = newDept;
+                        save();
+                        log(`Updated: ${emp.id}`);
+                        alert("Updated successfully!");
+                    } else {
+                        alert("Employee not found.");
+                        log("Update failed: Employee not found.");
+                    }
+                    break;
+
+                case '4':
+                    const deleteId = prompt("Enter ID to delete:");
+                    const initialLen = employees.length;
+                    employees = employees.filter(e => e.id !== deleteId);
+                    if (employees.length < initialLen) {
+                        save();
+                        log(`Deleted: ${deleteId}`);
+                        alert("Deleted successfully!");
+                    } else {
+                        alert("Employee not found.");
+                        log("Delete failed: Employee not found.");
+                    }
+                    break;
+
+                case '5':
+                    log("Exited simulation.");
+                    return;
+
+                default:
+                    alert("Invalid option");
+            }
+
+            setTimeout(menu, 100);
+        }
+
+        setTimeout(menu, 500);
+    }
+</script>
+
+</body>
+</html>
