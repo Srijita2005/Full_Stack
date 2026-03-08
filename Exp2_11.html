@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exp2_21 - Mongoose CRUD Operations Laboratory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e4e4e4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            color: #00d9ff;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00d9ff;
+        }
+
+        pre {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            border: 1px solid #30363d;
+        }
+
+        code {
+            color: #e6edf3;
+        }
+
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .comment { color: #8b949e; }
+        .function { color: #d2a8ff; }
+        .variable { color: #ffa657; }
+        .number { color: #79c0ff; }
+
+        .client-interface {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .client-interface {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 0.95rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #00d9ff;
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: white;
+        }
+
+        .btn-create:hover {
+            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+        }
+
+        .btn-read {
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+            color: white;
+        }
+
+        .btn-read:hover {
+            background: linear-gradient(135deg, #388bfd 0%, #58a6ff 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 139, 253, 0.4);
+        }
+
+        .btn-update {
+            background: linear-gradient(135deg, #9e6a03 0%, #d29922 100%);
+            color: white;
+        }
+
+        .btn-update:hover {
+            background: linear-gradient(135deg, #d29922 0%, #e3b341 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(210, 153, 34, 0.4);
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #b62324 0%, #da3633 100%);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(218, 54, 51, 0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(135deg, #484f58 0%, #6e7681 100%);
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(135deg, #6e7681 0%, #8b949e 100%);
+        }
+
+        .output-section {
+            grid-column: 1 / -1;
+        }
+
+        .output-container {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #30363d;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .output-title {
+            color: #8b949e;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .output-json {
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .json-key { color: #79c0ff; }
+        .json-string { color: #a5d6ff; }
+        .json-number { color: #ffa657; }
+        .json-boolean { color: #ff7b72; }
+
+        .status-bar {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-success {
+            background: rgba(46, 160, 67, 0.2);
+            border: 1px solid #238636;
+            color: #3fb950;
+        }
+
+        .status-error {
+            background: rgba(248, 81, 73, 0.2);
+            border: 1px solid #b62324;
+            color: #f85149;
+        }
+
+        .status-method {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .method-post { background: #238636; }
+        .method-get { background: #1f6feb; }
+        .method-put { background: #9e6a03; }
+        .method-delete { background: #b62324; }
+
+        .stored-records {
+            margin-top: 20px;
+        }
+
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .record-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+
+        .record-card:hover {
+            border-color: #00d9ff;
+            transform: translateY(-2px);
+        }
+
+        .record-id {
+            font-size: 0.75rem;
+            color: #8b949e;
+            margin-bottom: 8px;
+        }
+
+        .record-name {
+            font-size: 1.1rem;
+            color: #e6edf3;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .record-details {
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+
+        .record-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        .badge-electronics { background: rgba(56, 139, 253, 0.3); color: #58a6ff; }
+        .badge-clothing { background: rgba(163, 113, 247, 0.3); color: #a371f7; }
+        .badge-food { background: rgba(210, 153, 34, 0.3); color: #d29922; }
+        .badge-books { background: rgba(46, 160, 67, 0.3); color: #3fb950; }
+        .badge-other { background: rgba(139, 148, 158, 0.3); color: #8b949e; }
+
+        .in-stock { color: #3fb950; }
+        .out-of-stock { color: #f85149; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab.active {
+            background: rgba(0, 217, 255, 0.1);
+            color: #00d9ff;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .id-input-section {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exp2_21 - Mongoose CRUD Operations Laboratory</h1>
+
+        <!-- Frontend Client Simulation -->
+        <div class="section">
+            <h2 class="section-title">Frontend Client Simulation (Mock REST Client)</h2>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="create">POST - Create</button>
+                <button class="tab" data-tab="read">GET - Read</button>
+                <button class="tab" data-tab="update">PUT - Update</button>
+                <button class="tab" data-tab="delete">DELETE - Delete</button>
+            </div>
+
+            <!-- CREATE Tab -->
+            <div id="create-tab" class="tab-content active">
+                <h3 style="color: #3fb950; margin-bottom: 15px;">Create New Product (POST /api/products)</h3>
+                <div class="form-group">
+                    <label for="create-name">Product Name *</label>
+                    <input type="text" id="create-name" placeholder="Enter product name (2-100 characters)">
+                </div>
+                <div class="form-group">
+                    <label for="create-price">Price * ($)</label>
+                    <input type="number" id="create-price" placeholder="Enter price (0 - 999999.99)" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="create-category">Category *</label>
+                    <select id="create-category">
+                        <option value="">Select category</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Food">Food</option>
+                        <option value="Books">Books</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="create-instock">In Stock</label>
+                    <select id="create-instock">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-create" onclick="createProduct()">Create Product</button>
+                    <button class="btn btn-clear" onclick="clearCreateForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- READ Tab -->
+            <div id="read-tab" class="tab-content">
+                <h3 style="color: #58a6ff; margin-bottom: 15px;">Get Products (GET /api/products)</h3>
+                <div class="id-input-section">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="read-id">Product ID (Leave empty to get all products)</label>
+                        <input type="text" id="read-id" placeholder="Enter product ID or leave empty">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-read" onclick="readProducts()">Fetch Products</button>
+                    <button class="btn btn-clear" onclick="clearReadForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- UPDATE Tab -->
+            <div id="update-tab" class="tab-content">
+                <h3 style="color: #d29922; margin-bottom: 15px;">Update Product (PUT /api/products/:id)</h3>
+                <div class="id-input-section">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="update-id">Product ID *</label>
+                        <input type="text" id="update-id" placeholder="Enter product ID to update">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="update-name">Product Name</label>
+                    <input type="text" id="update-name" placeholder="Enter new name (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="update-price">Price ($)</label>
+                    <input type="number" id="update-price" placeholder="Enter new price (optional)" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="update-category">Category</label>
+                    <select id="update-category">
+                        <option value="">Keep current</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Food">Food</option>
+                        <option value="Books">Books</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="update-instock">In Stock</label>
+                    <select id="update-instock">
+                        <option value="">Keep current</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-update" onclick="updateProduct()">Update Product</button>
+                    <button class="btn btn-clear" onclick="clearUpdateForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- DELETE Tab -->
+            <div id="delete-tab" class="tab-content">
+                <h3 style="color: #f85149; margin-bottom: 15px;">Delete Product (DELETE /api/products/:id)</h3>
+                <div class="id-input-section">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="delete-id">Product ID *</label>
+                        <input type="text" id="delete-id" placeholder="Enter product ID to delete">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-delete" onclick="deleteProduct()">Delete Product</button>
+                    <button class="btn btn-clear" onclick="clearDeleteForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- Output Section -->
+            <div class="output-section" style="margin-top: 25px;">
+                <h3 class="section-title">Response Output</h3>
+                <div class="output-container">
+                    <div class="output-title">JSON Response:</div>
+                    <div id="output-json" class="output-json">// Response will appear here after executing an operation</div>
+                </div>
+                <div id="status-bar" class="status-bar" style="display: none;"></div>
+            </div>
+
+            <!-- Stored Records -->
+            <div class="stored-records">
+                <h3 class="section-title">Stored Records (In-Memory Database)</h3>
+                <div id="records-container" class="records-grid">
+                    <div style="color: #8b949e; padding: 20px; text-align: center;">No records yet. Create a product to see it here.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // In-memory database simulation
+        const database = {
+            products: [],
+            counter: 1
+        };
+
+        // Helper function to generate MongoDB-like ObjectId
+        function generateObjectId() {
+            const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+            const random = Math.random().toString(16).substring(2, 18);
+            return timestamp + random;
+        }
+
+        // Helper function to generate MongoDB-like _id
+        function generateId() {
+            const hex = '0123456789abcdef';
+            let id = '';
+            for (let i = 0; i < 24; i++) {
+                id += hex[Math.floor(Math.random() * 16)];
+            }
+            return id;
+        }
+
+        // Helper function to format JSON output
+        function formatJSON(obj) {
+            const json = JSON.stringify(obj, null, 2);
+            return json.replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+                       .replace(/: "([^"]+)"/g, ': <span class="json-string">"$1"</span>')
+                       .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+                       .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+        }
+
+        // Display output
+        function displayOutput(data, method, success = true) {
+            const outputEl = document.getElementById('output-json');
+            outputEl.innerHTML = formatJSON(data);
+
+            const statusBar = document.getElementById('status-bar');
+            const methodClass = `method-${method.toLowerCase()}`;
+            const statusClass = success ? 'status-success' : 'status-error';
+            const statusText = success ? 'Success' : 'Error';
+
+            statusBar.className = `status-bar ${statusClass}`;
+            statusBar.innerHTML = `
+                <span class="status-method ${methodClass}">${method}</span>
+                <span>${statusText}</span>
+            `;
+            statusBar.style.display = 'flex';
+        }
+
+        // Display status message
+        function displayStatus(message, success = true) {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.className = `status-bar ${success ? 'status-success' : 'status-error'}`;
+            statusBar.innerHTML = `<span>${message}</span>`;
+            statusBar.style.display = 'flex';
+        }
+
+        // Validation functions
+        function validateName(name) {
+            if (!name || name.trim() === '') {
+                return { valid: false, message: 'Product name is required' };
+            }
+            if (name.trim().length < 2) {
+                return { valid: false, message: 'Name must be at least 2 characters' };
+            }
+            if (name.trim().length > 100) {
+                return { valid: false, message: 'Name cannot exceed 100 characters' };
+            }
+            return { valid: true };
+        }
+
+        function validatePrice(price) {
+            if (price === '' || price === null || price === undefined) {
+                return { valid: false, message: 'Price is required' };
+            }
+            const numPrice = parseFloat(price);
+            if (isNaN(numPrice)) {
+                return { valid: false, message: 'Price must be a valid number' };
+            }
+            if (numPrice < 0) {
+                return { valid: false, message: 'Price cannot be negative' };
+            }
+            if (numPrice > 999999.99) {
+                return { valid: false, message: 'Price exceeds maximum value' };
+            }
+            return { valid: true, value: numPrice };
+        }
+
+        function validateCategory(category) {
+            const validCategories = ['Electronics', 'Clothing', 'Food', 'Books', 'Other'];
+            if (!category || category === '') {
+                return { valid: false, message: 'Category is required' };
+            }
+            if (!validCategories.includes(category)) {
+                return { valid: false, message: 'Invalid category' };
+            }
+            return { valid: true };
+        }
+
+        // Update stored records display
+        function updateRecordsDisplay() {
+            const container = document.getElementById('records-container');
+
+            if (database.products.length === 0) {
+                container.innerHTML = '<div style="color: #8b949e; padding: 20px; text-align: center;">No records yet. Create a product to see it here.</div>';
+                return;
+            }
+
+            container.innerHTML = database.products.map(product => {
+                const categoryClass = `badge-${product.category.toLowerCase()}`;
+                const stockClass = product.inStock ? 'in-stock' : 'out-of-stock';
+                const stockText = product.inStock ? 'In Stock' : 'Out of Stock';
+
+                return `
+                    <div class="record-card">
+                        <div class="record-id">ID: ${product._id}</div>
+                        <div class="record-name">${escapeHtml(product.name)}</div>
+                        <div class="record-details">
+                            <div>Price: $${product.price.toFixed(2)}</div>
+                            <div>Created: ${new Date(product.createdAt).toLocaleString()}</div>
+                            <div class="record-badge ${categoryClass}">${product.category}</div>
+                            <div class="${stockClass}" style="margin-top: 5px;">${stockText}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // CREATE Product
+        function createProduct() {
+            const name = document.getElementById('create-name').value;
+            const price = document.getElementById('create-price').value;
+            const category = document.getElementById('create-category').value;
+            const inStock = document.getElementById('create-instock').value === 'true';
+
+            // Validation
+            const nameValidation = validateName(name);
+            if (!nameValidation.valid) {
+                displayOutput({ error: nameValidation.message }, 'POST', false);
+                return;
+            }
+
+            const priceValidation = validatePrice(price);
+            if (!priceValidation.valid) {
+                displayOutput({ error: priceValidation.message }, 'POST', false);
+                return;
+            }
+
+            const categoryValidation = validateCategory(category);
+            if (!categoryValidation.valid) {
+                displayOutput({ error: categoryValidation.message }, 'POST', false);
+                return;
+            }
+
+            // Create product
+            const product = {
+                _id: generateId(),
+                name: name.trim(),
+                price: priceValidation.value,
+                category: category,
+                inStock: inStock,
+                createdAt: new Date().toISOString(),
+                __v: 0
+            };
+
+            database.products.push(product);
+            displayOutput(product, 'POST', true);
+            updateRecordsDisplay();
+            clearCreateForm();
+        }
+
+        // READ Products
+        function readProducts() {
+            const id = document.getElementById('read-id').value.trim();
+
+            if (id === '') {
+                // Get all products
+                displayOutput(database.products.length > 0 ? database.products : [], 'GET', true);
+            } else {
+                // Get single product
+                const product = database.products.find(p => p._id === id);
+                if (product) {
+                    displayOutput(product, 'GET', true);
+                } else {
+                    displayOutput({ error: 'Product not found' }, 'GET', false);
+                }
+            }
+        }
+
+        // UPDATE Product
+        function updateProduct() {
+            const id = document.getElementById('update-id').value.trim();
+            const name = document.getElementById('update-name').value;
+            const price = document.getElementById('update-price').value;
+            const category = document.getElementById('update-category').value;
+            const inStock = document.getElementById('update-instock').value;
+
+            if (!id) {
+                displayOutput({ error: 'Product ID is required' }, 'PUT', false);
+                return;
+            }
+
+            const productIndex = database.products.findIndex(p => p._id === id);
+            if (productIndex === -1) {
+                displayOutput({ error: 'Product not found' }, 'PUT', false);
+                return;
+            }
+
+            const product = { ...database.products[productIndex] };
+
+            // Update fields if provided
+            if (name && name.trim() !== '') {
+                const nameValidation = validateName(name);
+                if (!nameValidation.valid) {
+                    displayOutput({ error: nameValidation.message }, 'PUT', false);
+                    return;
+                }
+                product.name = name.trim();
+            }
+
+            if (price !== '' && price !== null) {
+                const priceValidation = validatePrice(price);
+                if (!priceValidation.valid) {
+                    displayOutput({ error: priceValidation.message }, 'PUT', false);
+                    return;
+                }
+                product.price = priceValidation.value;
+            }
+
+            if (category && category !== '') {
+                const categoryValidation = validateCategory(category);
+                if (!categoryValidation.valid) {
+                    displayOutput({ error: categoryValidation.message }, 'PUT', false);
+                    return;
+                }
+                product.category = category;
+            }
+
+            if (inStock && inStock !== '') {
+                product.inStock = inStock === 'true';
+            }
+
+            product.__v = (product.__v || 0) + 1;
+            database.products[productIndex] = product;
+
+            displayOutput(product, 'PUT', true);
+            updateRecordsDisplay();
+        }
+
+        // DELETE Product
+        function deleteProduct() {
+            const id = document.getElementById('delete-id').value.trim();
+
+            if (!id) {
+                displayOutput({ error: 'Product ID is required' }, 'DELETE', false);
+                return;
+            }
+
+            const productIndex = database.products.findIndex(p => p._id === id);
+            if (productIndex === -1) {
+                displayOutput({ error: 'Product not found' }, 'DELETE', false);
+                return;
+            }
+
+            const deletedProduct = database.products.splice(productIndex, 1)[0];
+            displayOutput({
+                message: 'Product deleted successfully',
+                product: deletedProduct
+            }, 'DELETE', true);
+            updateRecordsDisplay();
+            clearDeleteForm();
+        }
+
+        // Clear form functions
+        function clearCreateForm() {
+            document.getElementById('create-name').value = '';
+            document.getElementById('create-price').value = '';
+            document.getElementById('create-category').value = '';
+            document.getElementById('create-instock').value = 'true';
+        }
+
+        function clearReadForm() {
+            document.getElementById('read-id').value = '';
+        }
+
+        function clearUpdateForm() {
+            document.getElementById('update-id').value = '';
+            document.getElementById('update-name').value = '';
+            document.getElementById('update-price').value = '';
+            document.getElementById('update-category').value = '';
+            document.getElementById('update-instock').value = '';
+        }
+
+        function clearDeleteForm() {
+            document.getElementById('delete-id').value = '';
+        }
+
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // Initialize with sample data
+        function initializeSampleData() {
+            const sampleProducts = [
+                {
+                    _id: '65f4a8b7c1e6a8c1f4b8c7d1',
+                    name: 'Wireless Mouse',
+                    price: 29.99,
+                    category: 'Electronics',
+                    inStock: true,
+                    createdAt: '2024-03-15T10:30:00.000Z',
+                    __v: 0
+                },
+                {
+                    _id: '65f4a8b7c1e6a8c1f4b8c7d2',
+                    name: 'USB-C Cable',
+                    price: 14.99,
+                    category: 'Electronics',
+                    inStock: true,
+                    createdAt: '2024-03-15T11:00:00.000Z',
+                    __v: 0
+                },
+                {
+                    _id: '65f4a8b7c1e6a8c1f4b8c7d3',
+                    name: 'Python Programming',
+                    price: 49.99,
+                    category: 'Books',
+                    inStock: false,
+                    createdAt: '2024-03-15T11:30:00.000Z',
+                    __v: 0
+                }
+            ];
+
+            database.products = sampleProducts;
+            database.counter = 4;
+            updateRecordsDisplay();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeSampleData();
+        });
+    </script>
+</body>
+</html>
